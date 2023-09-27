@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_app/services/universities.dart';
 
 // import 'FoodMenu.dart';
 import 'UniversityTemplate.dart';
@@ -39,7 +40,8 @@ class _MyHomepageState extends State<MyHomepage> {
   List<University> filterUniversities(String query) {
     return universities.where((university) {
       final name = university.name?.toLowerCase() ?? '';
-      return name.contains(query.toLowerCase());
+      // return name.contains(query.toLowerCase());
+      return name.startsWith(query.toLowerCase());
     }).toList();
   }
 
@@ -55,29 +57,34 @@ class _MyHomepageState extends State<MyHomepage> {
   void initState() {
     super.initState();
     print("call initState");
-    getCurrentUniversity();
+    UniversityService().fetchUniversities().then((unis) {
+      setState(() {
+        universities = unis;
+        filteredUniversities = universities;
+      });
+    });
   }
 
-  // fetch data from API
-  Future<List<University>> getCurrentUniversity() async {
-    try {
-      var url = Uri.parse(
-          'http://universities.hipolabs.com/search?country=United+States');
-      var response = await http.get(url);
-      if (response.statusCode == 200) {
-        universities = universityFromJson(response.body);
-        filteredUniversities = List.from(universities);
-        print(
-            "filteredUniversities:  ${filteredUniversities.map((u) => u.name)}");
-        return universities;
-      } else {
-        throw Exception('Failed to fetch data');
-      }
-    } catch (e) {
-      print('Error: $e');
-      rethrow; // Rethrow the error to handle it in the FutureBuilder.
-    }
-  }
+  // // fetch data from API
+  // Future<List<University>> getCurrentUniversity() async {
+  //   try {
+  //     var url = Uri.parse(
+  //         'http://universities.hipolabs.com/search?country=United+States');
+  //     var response = await http.get(url);
+  //     if (response.statusCode == 200) {
+  //       universities = universityFromJson(response.body);
+  //       filteredUniversities = List.from(universities);
+  //       print(
+  //           "filteredUniversities:  ${filteredUniversities.map((u) => u.name)}");
+  //       return universities;
+  //     } else {
+  //       throw Exception('Failed to fetch data');
+  //     }
+  //   } catch (e) {
+  //     print('Error: $e');
+  //     rethrow; // Rethrow the error to handle it in the FutureBuilder.
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +93,7 @@ class _MyHomepageState extends State<MyHomepage> {
     return Scaffold(
       appBar: AppBar(title: SearchBar(onSearch: _handleSearch)),
       body: FutureBuilder(
-          future: getCurrentUniversity(),
+          future: UniversityService().fetchUniversities(),
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
             if (snapshot.hasError) {
               return Text('Error: ${snapshot.error}');
