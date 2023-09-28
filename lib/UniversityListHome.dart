@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/component/UniversityTemplate.dart';
 import 'package:flutter_app/script/University.dart';
 import 'package:flutter_app/services/universities.dart';
+import 'component/UniversityDetails.dart';
 
 class MyHomepage extends StatefulWidget {
   @override
@@ -85,11 +86,23 @@ class _MyHomepageState extends State<MyHomepage> {
                       return Padding(
                         padding: const EdgeInsets.all(2.0),
                         child: Column(children: [
-                          UniversityTemplate(
-                              filteredUniversities[index].name.toString(),
-                              filteredUniversities[index].country.toString(),
-                              Colors.teal,
-                              80)
+                          GestureDetector(
+                            onTap: () {
+                              // Navigate to the details page and pass the selected university
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => UniversityDetailsPage(
+                                      university: filteredUniversities[index]),
+                                ),
+                              );
+                            },
+                            child: UniversityTemplate(
+                                filteredUniversities[index].name.toString(),
+                                filteredUniversities[index].country.toString(),
+                                Colors.teal,
+                                80),
+                          ),
                         ]),
                       );
                     },
