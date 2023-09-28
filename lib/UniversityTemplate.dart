@@ -29,47 +29,45 @@ class UniversityTemplate extends StatelessWidget {
                   // verticalDirection: VerticalDirection.down,
                   // mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    const Text(
-                      "university: ",
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-
-                    ),
-                    Expanded(
-                        child: Padding(
-                            padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
-                            child: Text(
-                              university,
-                              style: const TextStyle(color: Colors.white),
-
-                            )))
-                  ])),
+                const Text(
+                  "university: ",
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Expanded(
+                    child: Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
+                        child: Text(
+                          university,
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 16),
+                        )))
+              ])),
           Expanded(
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   // verticalDirection: VerticalDirection.up,
                   // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      "Country: ",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-
-                    ),
-                    Expanded(
-                        child: Padding(
-                            padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
-                            child: Text(
-                              country,
-                              style: const TextStyle(color: Colors.white),
-                            )))
-                  ]))
+                const Text(
+                  "Country: ",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Expanded(
+                    child: Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
+                        child: Text(
+                          country,
+                          style: const TextStyle(color: Colors.white),
+                        )))
+              ]))
         ],
       ),
     );

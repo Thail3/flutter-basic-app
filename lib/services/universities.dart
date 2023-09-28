@@ -8,14 +8,12 @@ class UniversityService {
       var url = Uri.parse(
           'http://universities.hipolabs.com/search?country=United+States');
       var response = await http.get(url);
+
       if (response.statusCode == 200) {
-        var universities = universityFromJson(response.body);
-        return universities;
-      } else {
-        throw Exception('Failed to fetch data');
+        return universityFromJson(response.body);
       }
+      throw Exception('Failed to fetch data');
     } catch (e) {
-      print('Error: $e');
       rethrow; // Rethrow the error to handle it in the FutureBuilder.
     }
   }
