@@ -1,4 +1,4 @@
-import '../University.dart';
+import '../script/University.dart';
 import 'package:http/http.dart' as http;
 
 class UniversityService {
