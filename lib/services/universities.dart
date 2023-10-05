@@ -2,19 +2,31 @@ import '../script/University.dart';
 import 'package:http/http.dart' as http;
 
 class UniversityService {
-  // fetch data from API
-  Future<List<University>> fetchUniversities() async {
+  final int _pageSize = 10;
+  bool _isLoading = false;
+  int get pageSize => _pageSize;
+
+  Future<List<University>> fetchUniversities(int currentPage) async {
+    if (_isLoading) {
+      return [];
+    }
+
+    _isLoading = true;
+
     try {
       var url = Uri.parse(
-          'http://universities.hipolabs.com/search?country=United+States');
+          'http://universities.hipolabs.com/search?country=United+States&page=$currentPage&limit=$_pageSize');
       var response = await http.get(url);
 
       if (response.statusCode == 200) {
-        return universityFromJson(response.body);
+        final universities = universityFromJson(response.body);
+        _isLoading = false;
+        return universities;
       }
       throw Exception('Failed to fetch data');
     } catch (e) {
-      rethrow; // Rethrow the error to handle it in the FutureBuilder.
+      _isLoading = false;
+      rethrow;
     }
   }
 }

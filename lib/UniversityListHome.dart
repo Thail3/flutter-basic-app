@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/component/UniversityTemplate.dart';
 import 'package:flutter_app/script/University.dart';
 import 'package:flutter_app/services/universities.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'component/UniversityDetails.dart';
 import 'package:flutter_app/component/UniversityNavSearch.dart' as MyAppSearch;
 
@@ -12,37 +13,67 @@ class MyHomepage extends StatefulWidget {
 }
 
 class _MyHomepageState extends State<MyHomepage> {
-  // int number = 0;
-  get university => null;
   List<University> universities = [];
   List<University> filteredUniversities = [];
 
-  // query university list by name
-  List<University> filterUniversities(String query) {
-    return universities.where((university) {
-      final name = university.name?.toLowerCase() ?? '';
-      // return name.contains(query.toLowerCase());
-      return name.startsWith(query.toLowerCase());
-    }).toList();
-  }
+  bool isLoadingFirstTime = true;
 
-  // สร้าง function
-  void _handleSearch(String query) {
-    setState(() {
-      filteredUniversities = filterUniversities(query);
-    });
+  UniversityService universityService = UniversityService();
+
+  PagingController<int, University> pagingController =
+      PagingController(firstPageKey: 0);
+
+  // // query university list by name
+  // List<University> filterUniversities(String query) {
+  //   return universities.where((university) {
+  //     final name = university.name?.toLowerCase() ?? '';
+  //     // return name.contains(query.toLowerCase());
+  //     return name.startsWith(query.toLowerCase());
+  //   }).toList();
+  // }
+
+  // // สร้าง function
+  // void _handleSearch(String query) {
+  //   setState(() {
+  //     filteredUniversities = filterUniversities(query);
+  //   });
+  //   pagingController.refresh();
+  // }
+
+  Future<void> fetchPage(int pageKey) async {
+    try {
+      final newItems = await universityService.fetchUniversities(pageKey);
+
+      newItems.sort((a, b) => (a.name ?? "").compareTo(b.name ?? ""));
+
+      if (newItems.isEmpty) {
+        // If there are no more items, consider it as the last page
+        pagingController.appendLastPage([]);
+        return;
+      }
+
+      // Append the new items to the existing list
+      setState(() {
+        universities.addAll(newItems);
+        isLoadingFirstTime = false;
+      });
+
+      // Append the page data to the controller
+      final nextPageKey = pageKey + 1;
+      pagingController.appendPage(newItems, nextPageKey);
+    } catch (error) {
+      pagingController.error = error;
+    }
   }
 
   @override
   // จะถูกเรียกใช้งานก่อนที่จะเริ่มทํางาน
   void initState() {
     super.initState();
-    print("call initState");
-    UniversityService().fetchUniversities().then((unis) {
-      setState(() {
-        universities = unis;
-        filteredUniversities = universities;
-      });
+
+    fetchPage(pagingController.firstPageKey);
+    pagingController.addPageRequestListener((pageKey) {
+      fetchPage(pageKey);
     });
   }
 
@@ -51,71 +82,76 @@ class _MyHomepageState extends State<MyHomepage> {
     print("call build");
 
     return Scaffold(
-        appBar: AppBar(
-            title: MyAppSearch.SearchBar(
-          onSearch: _handleSearch,
+      // appBar: AppBar(
+      //     title: MyAppSearch.SearchBar(
+      //   onSearch: _handleSearch,
 
-          // handle function onClear เมื่อเคลียให้ทำการดึงข้อมูลมาใหม่
-          onClear: () {
-            setState(() {
-              universities = [];
-              filteredUniversities = [];
-            });
-            UniversityService().fetchUniversities().then((unis) {
-              setState(() {
-                universities = unis;
-                filteredUniversities = universities;
-              });
-            });
-          },
-        )),
-        body: Center(
-          child: FutureBuilder(
-              future: UniversityService().fetchUniversities(),
-              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                }
-                if (snapshot.connectionState == ConnectionState.done) {
-                  // sort university by name a to z
-                  filteredUniversities
-                      .sort((a, b) => (a.name ?? "").compareTo(b.name ?? ""));
+      //   // handle function onClear เมื่อเคลียให้ทำการดึงข้อมูลมาใหม่
+      //   onClear: () {
+      //     setState(() {
+      //       universities = [];
+      //       filteredUniversities = [];
+      //     });
+      //     pagingController.refresh();
+      //   },
+      // )),
+      body: Center(
+        child: isLoadingFirstTime
+            ? const CircularProgressIndicator(
+                valueColor:
+                    AlwaysStoppedAnimation<Color>(Colors.deepOrangeAccent),
+                strokeWidth: 5,
+              )
+            : PagedListView<int, University>(
+                pagingController: pagingController,
+                builderDelegate: PagedChildBuilderDelegate<University>(
+                  itemBuilder: (context, university, index) {
+                    final item = pagingController.itemList?[index];
 
-                  return ListView.builder(
-                    itemCount: filteredUniversities.length,
-                    itemBuilder: (BuildContext context, int index) {
+                    if (item != null) {
                       return Padding(
                         padding: const EdgeInsets.all(2.0),
-                        child: Column(children: [
-                          GestureDetector(
-                            onTap: () {
-                              // Navigate to the details page and pass the selected university
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => UniversityDetailsPage(
-                                      university: filteredUniversities[index]),
-                                ),
-                              );
-                            },
-                            child: UniversityTemplate(
-                                filteredUniversities[index].name.toString(),
-                                filteredUniversities[index].country.toString(),
+                        child: Column(
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => UniversityDetailsPage(
+                                      university: item,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: UniversityTemplate(
+                                item.name.toString(),
+                                item.country.toString(),
                                 Colors.teal,
-                                80),
-                          ),
-                        ]),
+                                80,
+                              ),
+                            ),
+                          ],
+                        ),
                       );
-                    },
-                  );
-                }
+                    } else {
+                      // Handle the case where 'item' is null, e.g., display a loading indicator or an error message.
+                      return const CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.deepOrangeAccent),
+                        strokeWidth: 5,
+                      );
+                    }
+                  },
+                ),
+              ),
+      ),
+    );
+  }
 
-                return const CircularProgressIndicator(
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(Colors.deepOrangeAccent),
-                  strokeWidth: 5,
-                );
-              }),
-        ));
+  @override
+  void dispose() {
+    pagingController.dispose();
+    super.dispose();
   }
 }
